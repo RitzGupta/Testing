@@ -1,0 +1,51 @@
+AWSTemplateFormatVersion: "2010-09-09"
+
+Parameters:
+  LogGroupName:
+    Type: String
+    Default: 'cloudTrailLog'
+  MetricValue:
+    Type: String
+    Default: '1'
+  MetricNamespace:
+    Type: String
+    Default: "WebServer/TerminateInstance"
+  MetricName:
+    Type: String
+    Default: "TerminateInstancesCount"
+  FilterPattern:
+    Type: String
+    Default: '{ $.eventName = "TerminateInstances" }'
+  AlarmName:
+    Type: String
+    Default: InstanceTerminateAlarm
+Resources:
+  TerminateInstancesFilter: 
+    Type: AWS::Logs::MetricFilter
+    Properties: 
+      LogGroupName: !Ref LogGroupName
+      FilterPattern: !Ref FilterPattern
+      MetricTransformations: 
+        - 
+          MetricValue: !Ref MetricValue
+          MetricNamespace: !Ref MetricNamespace
+          MetricName: !Ref MetricName
+  
+  TerminateInstancesAlarm:
+    DependsOn: TerminateInstancesFilter
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Ref AlarmName
+      AlarmActions: 
+        - "arn:aws:sns:us-east-1:671394177905:Default_CloudWatch_Alarms_Topic"
+      MetricName: !Ref MetricName
+      Namespace: !Ref MetricNamespace
+      Dimensions:
+        - Name:  Instance
+          Value: Count
+      Statistic: Sum
+      Period: 60
+      EvaluationPeriods: 5
+      Threshold: 0
+      ComparisonOperator: GreaterThanThreshold
+      #Unit: Count
