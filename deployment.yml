@@ -1,0 +1,46 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dir-app-deployment
+  namespace: interview
+  labels:
+    app: dir-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: dir-app
+  template:
+    metadata:
+      labels:
+        app: dir-app
+    spec:
+      containers:
+        - name: dir-app
+          image: ritikgupta/dirapp
+          ports:
+            - containerPort: 8080
+          resources:
+            requests:
+              memory: "500Ki"
+              cpu: "250m"
+              ephemeral-storage: "2Mi"
+            limits:
+              memory: "100Mi"
+              cpu: "500m"
+              ephemeral-storage: "20Mi"
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: dir-app-service
+  namespace: interview
+spec:
+  ports:
+  - port: 8080
+    targetPort: 8080
+  selector:
+    app: dir-app
+  type: NodePort
